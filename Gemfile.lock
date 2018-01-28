@@ -15,7 +15,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  unirest (~> 1.1.2)
+  unirest
 
 BUNDLED WITH
    1.16.1

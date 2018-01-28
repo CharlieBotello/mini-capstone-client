@@ -1,9 +1,18 @@
-require 'unirest'
 
-system 'clear'
+require_relative 'frontend'
+
+Frontend.new.run 
 
 
-puts "Welcome to my product app"
+
+
+
+
+
+
+
+
+
 
 
 
