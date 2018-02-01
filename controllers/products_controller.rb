@@ -1,108 +1,115 @@
 module ProductsController
   def products_index_action
-    response = Unirest.get("http://localhost:3000/products")
-    product_hashs = response.body
-    products = []
-
-    product_hashs.each do |product_hash|
-      products << Product.new(product_hash)
-    end
+    product_hashs = get_request("/products")
+    products = Product.convert_hashs(product_hashs)
 
     products_index_view(products)
   end
 
   def products_show_action
-    print "Enter product id: "
-    input_id = gets.chomp
+    input_id = products_id_form
 
-    response = Unirest.get("http://localhost:3000/products/#{input_id}")
-    product_hash = response.body
+    product_hash = get_request("/products/#{input_id}")
     product = Product.new(product_hash)
 
     products_show_view(product)
+
+    puts "Press enter to continue or type 'o' to order"
+    user_choice = gets.chomp 
+    if user_choice == 'o'
+      print "Enter a quanity to order: "
+      input_quantity = gets.chomp
+      client_params = {
+
+                        quaintity: input_quantity, 
+                        product_id: input_id
+                      }
+      # json_data = post_request("/order", client_params)
+      response = Unirest.post("http://localhost:3000/orders", parameters: client_params)
+      if response.code == 200
+      puts JSON.pretty_generate(response.body)
+      elsif response.code == 401
+        puts "Nope, try logging in first"
+      end 
+    end 
   end
 
   def products_create_action
-    client_params = {}
+    client_params = products_new_form
+    response = Unirest.post("http://llcalhost:3000/products", parameters: client_params)
 
-    print "Name: "
-    client_params[:name] = gets.chomp
+    if response == 200
+      product = Product.new(response.body)
+      products_show_view(product)
+    
 
-    print "Description: "
-    client_params[:description] = gets.chomp
-
-    print "Price: "
-    client_params[:price] = gets.chomp
-
-    print "Image Url: "
-    client_params[:image_url] = gets.chomp
-
-    response = Unirest.post(
-                            "http://localhost:3000/products",
-                            parameters: client_params
-                            )
-
-    if response.code == 200
-      product_data = response.body
-      puts JSON.pretty_generate(product_data)
-    else
+    elsif response.code == 422
       errors = response.body["errors"]
-      errors.each do |error|
-        puts error
-      end
+      products_errors_view(errors)
+    elsif response.code == 401
+      puts JSON.pretty_generate(response.body)
     end
   end
 
   def products_update_action
-    print "Enter product id: "
-    input_id = gets.chomp
+    input_id = products_id_form
+    product_hash = get_request("/products/#{input_id}")
+    product = Product.new(product_hash)
 
-    response = Unirest.get("http://localhost:3000/products/#{input_id}")
-    product = response.body
+    client_params = products_update_form(product)
 
-    client_params = {}
 
-    print "Name (#{product["name"]}): "
-    client_params[:name] = gets.chomp
+    client_params = products_update_form(product)
 
-    print "Description (#{product["description"]}): "
-    client_params[:description] = gets.chomp
+    # json_data = patch_request("/products/#{input_id}", client_params)
 
-    print "Price (#{product["price"]}): "
-    client_params[:price] = gets.chomp
-
-    print "Image Url (#{product["image_url"]}): "
-    client_params[:image_url] = gets.chomp
-
-    client_params.delete_if { |key, value| value.empty? }
-
-    response = Unirest.patch(
-                            "http://localhost:3000/products/#{input_id}",
-                            parameters: client_params
-                            )
+    response = Unirest.post("http://localhost:3000/products", parameters: client_params)
 
     if response.code == 200
-      product_data = response.body
-      puts JSON.pretty_generate(product_data)
-    else
+      product = Product.new(response.body)
+      products_show_view(product)
+    elsif response.code == 422
       errors = response.body["errors"]
-      errors.each do |error|
-        puts error
-      end
+      products_errors_view(errors)
+    elsif response.code == 401
+      puts JSON.pretty_generate(response.dody)
     end
   end
 
-  def products_destroy_action
-    print "Enter product id: "
-    input_id = gets.chomp
 
-    response = Unirest.delete("http://localhost:3000/products/#{input_id}")
-    data = response.body
-    puts data["message"]
+  def products_destroy_action
+    input_id = products_id_form
+    json_data = delete_request("/products/#{input_id}")
+    puts json_data["message"]
+    # response = Unirest.delete("http://localhost:3000/products/#{input_id}")
+    # if response.code == 200
+    #   puts response.body["message"]
+    # else response.code == 422
+    #   errors = json_data["errors"]
+    #   products_errors_view(errors)
+    # elsif response code == 421
+    #   puts JSON.pretty_generate(response.body)
+    # end
+    # # puts json_data["message"]
+  end
+
+  def products_search_action
+    print "Enter a name to search by: "
+    search_term = gets.chomp
+
+    product_hashs = get_request("/products?search=#{search_term}")
+    products = Product.convert_hashs(product_hashs)
+
+    products_index_view(products)
+  end
+
+  def products_sort_action(attribute)
+    product_hashs = get_request("/products?sort=#{attribute}")
+    products = Product.convert_hashs(product_hashs)
+
+    products_index_view(products)
   end
 end
-
-
 
 
 
