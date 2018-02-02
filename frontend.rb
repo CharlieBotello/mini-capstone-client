@@ -20,19 +20,23 @@ class Frontend
       puts "        [1.2] Sort products by price"
       puts "        [1.3] Sort products by name"
       puts "        [1.4] Sort products by description"
-     
+      puts "        [1.5] Show products by category"
+      # puts "        [1.5] Show products by category"
+
+
       puts "    [2] See one product"
       puts "    [3] Create a new product"
       puts "    [4] Update a product"
       puts "    [5] Destroy a product"
+      puts "    [6] Show all orders"
       puts ""
       puts "    [signup] Signup (create a user)"
       puts "    [login] Login (create a JSON web token)"
       puts "    [logout] Logout (erases a JSON web token)"
       puts ""
-      puts "      [6] Create a user "
-      puts "    [7] Show all orders"
-      puts "  [sign] Singup (create a user)"
+      puts "      [] Create a user "
+     
+      # puts "  [sign] Singup (create a user)"
 
 
       input_option = gets.chomp
@@ -47,6 +51,25 @@ class Frontend
         product_sort_action("name")
       elsif input_option ==("1.4")
         product_sort_action("description")
+      elsif input_option == "1.5"
+        puts 
+        response = Unirest.get("http://localhost:3000/categories")
+        category_hash = respoonse.body
+        puts "Categories"
+        puts "-" * 40 
+        
+        category_hashs .each do |category_hash|
+          puts "#{category_hash[name]}"
+        end 
+
+        print "Enter a category naem: "
+        category_name = get.chomp 
+        response = Unirest.get("http://localhost:3000/products?category=#{category_name}")
+        products_hashs = response.body
+
+        products_hashs.each do |prooduct_hash|
+          puts "- #{product_hash["name"]}"
+
       elsif input_option == "2"
         products_show_action
       elsif input_option == "3"
@@ -55,19 +78,20 @@ class Frontend
         products_update_action
       elsif input_option == "5"
         products_destroy_action
-        
-      elsif input_option == "7"
-        # orders_hashs = get_request("/order")
-        response = UNirest.get("http://localhost:3000/orders")
+      elsif input_option == "6"
+        response = Unirest.get("http://localhost:3000/orders")
         if response.code == 200
           puts JSON.pretty_generate(response.body)
         elsif repsonse.code == 401
           puts "You do not have a list of orders until you sign in, Jerk"
       elsif input_option == "signup"
+      # elsif input_option == "7"
+      #   # orders_hashs = get_request("/order")
+        # response = Unirest.get("http://localhost:3000/orders")
 
       
         puts 
-             puts "Signup for a new account"
+        puts "Signup for a new account"
         puts
         client_params = {}
 
@@ -120,49 +144,22 @@ class Frontend
 
 
   
-private
-  def get_request(url, client_params={})
-    Unirest.get("http://localhost:3000#{url}", parameters: client_params).body
+  private
+    def get_request(url, client_params={})
+      Unirest.get("http://localhost:3000#{url}", parameters: client_params).body
+    end
+
+    def post_request(url, client_params={})
+      Unirest.post("http://localhost:3000#{url}", parameters: client_params).body
+    end
+
+    def patch_request(url, client_params={})
+      Unirest.patch("http://localhost:3000#{url}", parameters: client_params).body
+    end
+
+    def delete_request(url, client_params={})
+      Unirest.delete("http://localhost:3000#{url}", parameters: client_params).body
+    end
   end
 
-  def post_request(url, client_params={})
-    Unirest.post("http://localhost:3000#{url}", parameters: client_params).body
-  end
-
-  def patch_request(url, client_params={})
-    Unirest.patch("http://localhost:3000#{url}", parameters: client_params).body
-  end
-
-  def delete_request(url, client_params={})
-    Unirest.delete("http://localhost:3000#{url}", parameters: client_params).body
-  end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
